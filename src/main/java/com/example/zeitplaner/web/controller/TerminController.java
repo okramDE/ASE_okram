@@ -2,74 +2,86 @@ package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Termin;
 import com.example.zeitplaner.service.TerminService;
+import com.example.zeitplaner.web.dto.TerminDto;
+import com.example.zeitplaner.web.mapper.TerminMapper;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/termine")
 public class TerminController {
+
     private final TerminService svc;
-    public TerminController(TerminService svc) { this.svc = svc; }
+    private final TerminMapper mapper;
 
-    // CREATE
+    public TerminController(TerminService svc, TerminMapper mapper) {
+        this.svc    = svc;
+        this.mapper = mapper;
+    }
+
+    // CREATE → nimmt TerminDto, gibt Liste<TerminDto> zurück
     @PostMapping
-    public List<Termin> create(@RequestBody Termin t) {
-        return svc.legeTerminAn(t);
+    public ResponseEntity<List<TerminDto>> erstelleTermin(
+            @Valid @RequestBody TerminDto dto
+    ) {
+        List<Termin> gespeicherte = svc.legeTerminAn(mapper.dtoZuEntity(dto));
+        List<TerminDto> out = gespeicherte.stream()
+                .map(mapper::entityZuDto)
+                .collect(Collectors.toList());
+        return ResponseEntity.status(HttpStatus.CREATED).body(out);
     }
 
-    // READ ALL
+    // READ ALL → Liste von TerminDto
     @GetMapping
-    public List<Termin> list() {
-        return svc.alleTermine();
+    public List<TerminDto> alleTermine() {
+        return svc.alleTermine().stream()
+                .map(mapper::entityZuDto)
+                .collect(Collectors.toList());
     }
 
-    // READ by ID
+    // READ by ID → TerminDto
     @GetMapping("/{id}")
-    public Termin getById(@PathVariable Long id) {
-        return svc.getById(id);
+    public TerminDto holeTermin(@PathVariable Long id) {
+        return mapper.entityZuDto(svc.getById(id));
     }
 
-    // UPDATE
+    // UPDATE → nimmt TerminDto, gibt TerminDto
     @PutMapping("/{id}")
-    public Termin update(@PathVariable Long id,
-                         @RequestBody Termin t) {
-        return svc.updateTermin(id, t);
+    public TerminDto aktualisiereTermin(
+            @PathVariable Long id,
+            @Valid @RequestBody TerminDto dto
+    ) {
+        Termin updated = svc.updateTermin(id, mapper.dtoZuEntity(dto));
+        return mapper.entityZuDto(updated);
     }
 
     // DELETE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public void loescheTermin(@PathVariable Long id) {
         svc.deleteTermin(id);
     }
 
-    //  Suche nach Kategorie-ID ---
-    // GET /api/termine/kategorie/{id}
-    @GetMapping("/kategorie/{id}")
-    public List<Termin> termineNachKategorieId(@PathVariable("id") Long kategorieId) {
-        return svc.sucheNachKategorieId(kategorieId);
+    // SEARCH nach Kategorie-ID
+    @GetMapping("/kategorie/{kategorieId}")
+    public List<TerminDto> termineNachKategorieId(@PathVariable Long kategorieId) {
+        return svc.sucheNachKategorieId(kategorieId).stream()
+                .map(mapper::entityZuDto)
+                .collect(Collectors.toList());
     }
 
-    // Suche nach Kategorie-Name ---
-    // GET /api/termine/kategorie/name/{name}
-    @GetMapping("/kategorie/name/{name}")
-    public List<Termin> termineNachKategorieName(@PathVariable("name") String name) {
-        return svc.sucheNachKategorieName(name);
-    }
-
-    // --- optionaler kombi-Endpoint für Suche nach Zeitraum oder Kategorie ---
-    // GET /api/termine/suche?kategorieId=1
-    // GET /api/termine/suche?kategorieName=Arbeit
-    // GET /api/termine/suche?von=2025-05-01T00:00&bis=2025-05-31T23:59
+    // SEARCH nach Zeitraum
     @GetMapping("/suche")
-    public List<Termin> suche(
+    public List<TerminDto> suche(
             @RequestParam(required = false) Long kategorieId,
-            @RequestParam(required = false) String kategorieName,
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime von,
@@ -78,17 +90,15 @@ public class TerminController {
             LocalDateTime bis
     ) {
         if (kategorieId != null) {
-            return svc.sucheNachKategorieId(kategorieId);
-        }
-        if (kategorieName != null) {
-            return svc.sucheNachKategorieName(kategorieName);
+            return termineNachKategorieId(kategorieId);
         }
         if (von != null && bis != null) {
-            return svc.sucheNachZeitraum(von, bis);
+            return svc.sucheNachZeitraum(von, bis).stream()
+                    .map(mapper::entityZuDto)
+                    .collect(Collectors.toList());
         }
         throw new ResponseStatusException(
                 HttpStatus.BAD_REQUEST,
-                "Bitte 'kategorieId' oder 'kategorieName' oder beide 'von' und 'bis' angeben");
+                "Bitte 'kategorieId' oder 'von' und 'bis' angeben");
     }
-
 }

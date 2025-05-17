@@ -2,61 +2,73 @@ package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Aufgabe;
 import com.example.zeitplaner.service.AufgabeService;
+import com.example.zeitplaner.web.dto.AufgabeDto;
+import com.example.zeitplaner.web.mapper.AufgabeMapper;
+import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/aufgaben")
 public class AufgabeController {
+
     private final AufgabeService svc;
-    public AufgabeController(AufgabeService svc) { this.svc = svc; }
+    private final AufgabeMapper mapper;
 
-    // CREATE
+    public AufgabeController(AufgabeService svc, AufgabeMapper mapper) {
+        this.svc    = svc;
+        this.mapper = mapper;
+    }
+
     @PostMapping
-    public Aufgabe create(@RequestBody Aufgabe a) {
-        return svc.legeAufgabeAn(a);
+    public AufgabeDto erstelleAufgabe(@Valid @RequestBody AufgabeDto dto) {
+        Aufgabe a = svc.legeAufgabeAn(mapper.dtoZuEntity(dto));
+        return mapper.entityZuDto(a);
     }
 
-    // READ ALL
     @GetMapping
-    public List<Aufgabe> list() {
-        return svc.getAufgabenSortiert();
+    public List<AufgabeDto> alleAufgaben() {
+        return svc.getAufgabenSortiert().stream()
+                .map(mapper::entityZuDto)
+                .collect(Collectors.toList());
     }
 
-    // READ by ID
     @GetMapping("/{id}")
-    public Aufgabe getById(@PathVariable Long id) {
-        return svc.getById(id);
+    public AufgabeDto holeAufgabe(@PathVariable Long id) {
+        return mapper.entityZuDto(svc.getById(id));
     }
 
-    // UPDATE
     @PutMapping("/{id}")
-    public Aufgabe update(@PathVariable Long id,
-                          @RequestBody Aufgabe a) {
-        return svc.updateAufgabe(id, a);
+    public AufgabeDto aktualisiereAufgabe(
+            @PathVariable Long id,
+            @Valid @RequestBody AufgabeDto dto
+    ) {
+        Aufgabe updated = svc.updateAufgabe(id, mapper.dtoZuEntity(dto));
+        return mapper.entityZuDto(updated);
     }
 
-    // DELETE
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
+    public void loescheAufgabe(@PathVariable Long id) {
         svc.deleteAufgabe(id);
     }
 
-    // SEARCH by deadline range
-    @GetMapping("/search")
-    public List<Aufgabe> searchByDeadline(
+    @GetMapping("/suche")
+    public List<AufgabeDto> sucheNachDeadline(
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime from,
+            LocalDateTime von,
             @RequestParam
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
-            LocalDateTime to
+            LocalDateTime bis
     ) {
-        return svc.sucheNachDeadline(from, to);
+        return svc.sucheNachDeadline(von, bis).stream()
+                .map(mapper::entityZuDto)
+                .collect(Collectors.toList());
     }
 }
