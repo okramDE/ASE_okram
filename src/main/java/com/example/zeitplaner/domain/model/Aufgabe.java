@@ -15,7 +15,7 @@ public class Aufgabe {
     private String titel;
     private LocalDateTime deadline;
 
-    @Enumerated(EnumType.STRING)
+    @Enumerated(EnumType.ORDINAL)
     private Prioritaet prioritaet;
 
     @ManyToOne(optional = false)
