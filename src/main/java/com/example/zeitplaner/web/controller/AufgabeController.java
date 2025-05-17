@@ -1,13 +1,17 @@
+// src/main/java/com/example/zeitplaner/web/controller/AufgabeController.java
 package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Aufgabe;
+import com.example.zeitplaner.domain.model.Kategorie;
+import com.example.zeitplaner.domain.model.Prioritaet;
 import com.example.zeitplaner.service.AufgabeService;
+import com.example.zeitplaner.service.KategorieService;
 import com.example.zeitplaner.web.dto.AufgabeDto;
-import com.example.zeitplaner.web.mapper.AufgabeMapper;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,30 +21,59 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/aufgaben")
 public class AufgabeController {
 
-    private final AufgabeService svc;
-    private final AufgabeMapper mapper;
+    private final AufgabeService aufgabeService;
+    private final KategorieService kategorieService;
 
-    public AufgabeController(AufgabeService svc, AufgabeMapper mapper) {
-        this.svc    = svc;
-        this.mapper = mapper;
+    public AufgabeController(AufgabeService aufgabeService,
+                             KategorieService kategorieService) {
+        this.aufgabeService   = aufgabeService;
+        this.kategorieService = kategorieService;
     }
 
     @PostMapping
     public AufgabeDto erstelleAufgabe(@Valid @RequestBody AufgabeDto dto) {
-        Aufgabe a = svc.legeAufgabeAn(mapper.dtoZuEntity(dto));
-        return mapper.entityZuDto(a);
+        Kategorie kat = kategorieService.getById(dto.getKategorieId());
+
+        Aufgabe a = new Aufgabe();
+        a.setTitel(dto.getTitel());
+        a.setDeadline(dto.getDeadline());
+        a.setPrioritaet(Prioritaet.valueOf(dto.getPrioritaet()));
+        a.setKategorie(kat);
+
+        Aufgabe saved = aufgabeService.legeAufgabeAn(a);
+
+        AufgabeDto out = new AufgabeDto();
+        out.setId(saved.getId());
+        out.setTitel(saved.getTitel());
+        out.setDeadline(saved.getDeadline());
+        out.setPrioritaet(saved.getPrioritaet().name());
+        out.setKategorieId(saved.getKategorie().getId());
+        return out;
     }
 
     @GetMapping
     public List<AufgabeDto> alleAufgaben() {
-        return svc.getAufgabenSortiert().stream()
-                .map(mapper::entityZuDto)
-                .collect(Collectors.toList());
+        return aufgabeService.getAufgabenSortiert().stream().map(a -> {
+            AufgabeDto o = new AufgabeDto();
+            o.setId(a.getId());
+            o.setTitel(a.getTitel());
+            o.setDeadline(a.getDeadline());
+            o.setPrioritaet(a.getPrioritaet().name());
+            o.setKategorieId(a.getKategorie().getId());
+            return o;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public AufgabeDto holeAufgabe(@PathVariable Long id) {
-        return mapper.entityZuDto(svc.getById(id));
+        Aufgabe a = aufgabeService.getById(id);
+        AufgabeDto o = new AufgabeDto();
+        o.setId(a.getId());
+        o.setTitel(a.getTitel());
+        o.setDeadline(a.getDeadline());
+        o.setPrioritaet(a.getPrioritaet().name());
+        o.setKategorieId(a.getKategorie().getId());
+        return o;
     }
 
     @PutMapping("/{id}")
@@ -48,14 +81,29 @@ public class AufgabeController {
             @PathVariable Long id,
             @Valid @RequestBody AufgabeDto dto
     ) {
-        Aufgabe updated = svc.updateAufgabe(id, mapper.dtoZuEntity(dto));
-        return mapper.entityZuDto(updated);
+        Kategorie kat = kategorieService.getById(dto.getKategorieId());
+
+        Aufgabe neu = new Aufgabe();
+        neu.setTitel(dto.getTitel());
+        neu.setDeadline(dto.getDeadline());
+        neu.setPrioritaet(Prioritaet.valueOf(dto.getPrioritaet()));
+        neu.setKategorie(kat);
+
+        Aufgabe updated = aufgabeService.updateAufgabe(id, neu);
+
+        AufgabeDto o = new AufgabeDto();
+        o.setId(updated.getId());
+        o.setTitel(updated.getTitel());
+        o.setDeadline(updated.getDeadline());
+        o.setPrioritaet(updated.getPrioritaet().name());
+        o.setKategorieId(updated.getKategorie().getId());
+        return o;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void loescheAufgabe(@PathVariable Long id) {
-        svc.deleteAufgabe(id);
+        aufgabeService.deleteAufgabe(id);
     }
 
     @GetMapping("/suche")
@@ -67,8 +115,14 @@ public class AufgabeController {
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
             LocalDateTime bis
     ) {
-        return svc.sucheNachDeadline(von, bis).stream()
-                .map(mapper::entityZuDto)
-                .collect(Collectors.toList());
+        return aufgabeService.sucheNachDeadline(von, bis).stream().map(a -> {
+            AufgabeDto o = new AufgabeDto();
+            o.setId(a.getId());
+            o.setTitel(a.getTitel());
+            o.setDeadline(a.getDeadline());
+            o.setPrioritaet(a.getPrioritaet().name());
+            o.setKategorieId(a.getKategorie().getId());
+            return o;
+        }).collect(Collectors.toList());
     }
 }

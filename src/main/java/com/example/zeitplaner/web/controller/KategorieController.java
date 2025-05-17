@@ -1,9 +1,9 @@
+// src/main/java/com/example/zeitplaner/web/controller/KategorieController.java
 package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Kategorie;
 import com.example.zeitplaner.service.KategorieService;
 import com.example.zeitplaner.web.dto.KategorieDto;
-import com.example.zeitplaner.web.mapper.KategorieMapper;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -15,32 +15,43 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/kategorien")
 public class KategorieController {
 
-    private final KategorieService svc;
-    private final KategorieMapper mapper;
+    private final KategorieService kategorieService;
 
-    public KategorieController(KategorieService svc, KategorieMapper mapper) {
-        this.svc    = svc;
-        this.mapper = mapper;
+    public KategorieController(KategorieService kategorieService) {
+        this.kategorieService = kategorieService;
     }
 
     @PostMapping
     public KategorieDto erstelleKategorie(
             @Valid @RequestBody KategorieDto dto
     ) {
-        Kategorie k = svc.create(mapper.dtoZuEntity(dto));
-        return mapper.entityZuDto(k);
+        Kategorie k = new Kategorie();
+        k.setName(dto.getName());
+        Kategorie saved = kategorieService.create(k);
+
+        KategorieDto out = new KategorieDto();
+        out.setId(saved.getId());
+        out.setName(saved.getName());
+        return out;
     }
 
     @GetMapping
     public List<KategorieDto> alleKategorien() {
-        return svc.list().stream()
-                .map(mapper::entityZuDto)
-                .collect(Collectors.toList());
+        return kategorieService.list().stream().map(k -> {
+            KategorieDto o = new KategorieDto();
+            o.setId(k.getId());
+            o.setName(k.getName());
+            return o;
+        }).collect(Collectors.toList());
     }
 
     @GetMapping("/{id}")
     public KategorieDto holeKategorie(@PathVariable Long id) {
-        return mapper.entityZuDto(svc.getById(id));
+        Kategorie k = kategorieService.getById(id);
+        KategorieDto o = new KategorieDto();
+        o.setId(k.getId());
+        o.setName(k.getName());
+        return o;
     }
 
     @PutMapping("/{id}")
@@ -48,13 +59,19 @@ public class KategorieController {
             @PathVariable Long id,
             @Valid @RequestBody KategorieDto dto
     ) {
-        Kategorie updated = svc.update(id, mapper.dtoZuEntity(dto));
-        return mapper.entityZuDto(updated);
+        Kategorie neu = new Kategorie();
+        neu.setName(dto.getName());
+        Kategorie updated = kategorieService.update(id, neu);
+
+        KategorieDto o = new KategorieDto();
+        o.setId(updated.getId());
+        o.setName(updated.getName());
+        return o;
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void loescheKategorie(@PathVariable Long id) {
-        svc.delete(id);
+        kategorieService.delete(id);
     }
 }
