@@ -4,7 +4,8 @@ target/
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-data/*
+data/zeitplaner.mv.db
+data/zeitplaner.trace.db
 ### STS ###
 .apt_generated
 .classpath
