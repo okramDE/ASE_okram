@@ -14,10 +14,12 @@ import java.util.List;
 public class TerminService {
     private final TerminRepository repo;
     private final WiederholungsRegelService wiederholungsRegelService;
+    private final KollisionsService kollisionsService;
 
-    public TerminService(TerminRepository repo, WiederholungsRegelService wiederholungsRegelService) {
+    public TerminService(TerminRepository repo, WiederholungsRegelService wiederholungsRegelService, KollisionsService kollisionsService) {
         this.repo = repo;
         this.wiederholungsRegelService = wiederholungsRegelService;
+        this.kollisionsService = kollisionsService;
     }
 
     public List<Termin> legeTerminAn(Termin t) {
@@ -26,11 +28,8 @@ public class TerminService {
         List<Termin> saved = new ArrayList<>();
         for (Termin term : batch) {
             // 2) Kollision prüfen
-            if (repo.existsByStartBeforeAndEndeAfter(term.getEnde(), term.getStart())) {
-                throw new ResponseStatusException(
-                        HttpStatus.CONFLICT,
-                        "Kollision bei " + term.getStart()
-                );
+            if (kollisionsService.hatKollision(term)) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Kollision bei " + term.getStart());
             }
             saved.add(repo.save(term));
         }
@@ -45,9 +44,8 @@ public class TerminService {
         return repo.findById(id)
                 .map(existing -> {
                     // Kollisionen ignorieren, wenn es derselbe Termin ist:
-                    if (repo.existsByIdNotAndStartLessThanAndEndeGreaterThan(
-                            id, update.getEnde(), update.getStart())) {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Termin kollidiert");
+                    if (kollisionsService.hatKollision(update)) {
+                        throw new ResponseStatusException(HttpStatus.CONFLICT, "Kollision bei " + update.getStart());
                     }
                     // Validierung
                     if (update.getStart().isAfter(update.getEnde()) || update.getStart().isEqual(update.getEnde())) {
