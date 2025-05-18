@@ -1,4 +1,4 @@
-package com.example.zeitplaner.domain.repository.model;
+package com.example.zeitplaner.domain.model;
 
 import com.example.zeitplaner.domain.model.WiederholungsRegelConverter;
 import org.junit.jupiter.api.Test;
