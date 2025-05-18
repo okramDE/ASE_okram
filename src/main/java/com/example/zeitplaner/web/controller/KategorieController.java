@@ -3,9 +3,11 @@ package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Kategorie;
 import com.example.zeitplaner.service.KategorieService;
+import com.example.zeitplaner.web.dto.KategorieCreateDto;
 import com.example.zeitplaner.web.dto.KategorieDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,20 +23,36 @@ public class KategorieController {
         this.kategorieService = kategorieService;
     }
 
+//    GET http://localhost:8080/api/kategorien/{{id}}
+//    Content-Type: application/json
+//
+//    {
+//        "id": 0,
+//            "name": ""
+//    }
     @PostMapping
-    public KategorieDto erstelleKategorie(
-            @Valid @RequestBody KategorieDto dto
+    public ResponseEntity<KategorieDto> erstelleKategorie(
+            @Valid @RequestBody KategorieCreateDto dto
     ) {
         Kategorie k = new Kategorie();
         k.setName(dto.getName());
         Kategorie saved = kategorieService.create(k);
 
         KategorieDto out = new KategorieDto();
-        out.setId(saved.getId());
+        out.setId(saved.getId());    // generierte id
         out.setName(saved.getName());
-        return out;
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(out);
     }
 
+//    GET http://localhost:8080/api/kategorien
+//    Content-Type: application/json
+//
+//    {
+//        "name": ""
+//    }
     @GetMapping
     public List<KategorieDto> alleKategorien() {
         return kategorieService.list().stream().map(k -> {
@@ -45,6 +63,10 @@ public class KategorieController {
         }).collect(Collectors.toList());
     }
 
+//    @id = 1
+//    GET http://localhost:8080/api/kategorien/{{id}}
+//    Content-Type: application/json
+
     @GetMapping("/{id}")
     public KategorieDto holeKategorie(@PathVariable Long id) {
         Kategorie k = kategorieService.getById(id);
@@ -53,6 +75,15 @@ public class KategorieController {
         o.setName(k.getName());
         return o;
     }
+
+//    @id = 2
+//    PUT http://localhost:8080/api/kategorien/{{id}}
+//    Content-Type: application/json
+//
+//    {
+//        "id": 2,
+//            "name": "testupdate"
+//    }
 
     @PutMapping("/{id}")
     public KategorieDto aktualisiereKategorie(
@@ -69,6 +100,8 @@ public class KategorieController {
         return o;
     }
 
+//    @id = 3
+//    DELETE http://localhost:8080/api/kategorien/{{id}}
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void loescheKategorie(@PathVariable Long id) {

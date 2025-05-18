@@ -6,10 +6,12 @@ import com.example.zeitplaner.domain.model.Kategorie;
 import com.example.zeitplaner.domain.model.Prioritaet;
 import com.example.zeitplaner.service.AufgabeService;
 import com.example.zeitplaner.service.KategorieService;
+import com.example.zeitplaner.web.dto.AufgabeCreateDto;
 import com.example.zeitplaner.web.dto.AufgabeDto;
 import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -30,8 +32,19 @@ public class AufgabeController {
         this.kategorieService = kategorieService;
     }
 
+//    POST http://localhost:8080/api/aufgaben
+//    Content-Type: application/json
+//
+//    {
+//        "titel": "test",
+//            "deadline": "2025-12-03T10:15:30",
+//            "prioritaet": "MEDIUM",
+//            "kategorieId": 1
+//    }
     @PostMapping
-    public AufgabeDto erstelleAufgabe(@Valid @RequestBody AufgabeDto dto) {
+    public ResponseEntity<AufgabeDto> erstelleAufgabe(
+            @Valid @RequestBody AufgabeCreateDto dto
+    ) {
         Kategorie kat = kategorieService.getById(dto.getKategorieId());
 
         Aufgabe a = new Aufgabe();
@@ -43,14 +56,18 @@ public class AufgabeController {
         Aufgabe saved = aufgabeService.legeAufgabeAn(a);
 
         AufgabeDto out = new AufgabeDto();
-        out.setId(saved.getId());
+        out.setId(saved.getId());      // hier kommt die generierte id
         out.setTitel(saved.getTitel());
         out.setDeadline(saved.getDeadline());
         out.setPrioritaet(saved.getPrioritaet().name());
         out.setKategorieId(saved.getKategorie().getId());
-        return out;
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(out);
     }
 
+//GET http://localhost:8080/api/aufgaben
     @GetMapping
     public List<AufgabeDto> alleAufgaben() {
         return aufgabeService.getAufgabenSortiert().stream().map(a -> {
@@ -64,6 +81,8 @@ public class AufgabeController {
         }).collect(Collectors.toList());
     }
 
+    //@id = 1
+    //GET http://localhost:8080/api/aufgaben/{{id}}
     @GetMapping("/{id}")
     public AufgabeDto holeAufgabe(@PathVariable Long id) {
         Aufgabe a = aufgabeService.getById(id);
@@ -76,6 +95,17 @@ public class AufgabeController {
         return o;
     }
 
+//    @id = 2
+//    PUT http://localhost:8080/api/aufgaben/{{id}}
+//    Content-Type: application/json
+//
+//    {
+//        "id": 2,
+//            "titel": "testupdate",
+//            "deadline": "2025-12-03T10:15:30",
+//            "prioritaet": "HIGH",
+//            "kategorieId": 1
+//    }
     @PutMapping("/{id}")
     public AufgabeDto aktualisiereAufgabe(
             @PathVariable Long id,
@@ -106,6 +136,7 @@ public class AufgabeController {
         aufgabeService.deleteAufgabe(id);
     }
 
+    //GET http://localhost:8080/api/aufgaben/suche?von=2025-12-02T10:15:30&bis=2025-12-08T10:15:30
     @GetMapping("/suche")
     public List<AufgabeDto> sucheNachDeadline(
             @RequestParam

@@ -25,4 +25,6 @@ public interface TerminRepository extends JpaRepository<Termin, Long> {
     // Existenzprüfung
     boolean existsByStartBeforeAndEndeAfter(LocalDateTime ende, LocalDateTime start);
 
+    boolean existsByIdNotAndStartLessThanAndEndeGreaterThan(Long id, LocalDateTime ende, LocalDateTime start);
+
 }

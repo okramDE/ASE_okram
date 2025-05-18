@@ -15,7 +15,7 @@ public class TerminDto {
 
     @NotNull
     @Future(message = "Beginn muss in der Zukunft liegen")
-    private LocalDateTime beginn;
+    private LocalDateTime start;
 
     @NotNull
     @Future(message = "Ende muss in der Zukunft liegen")

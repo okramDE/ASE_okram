@@ -44,8 +44,17 @@ public class TerminService {
     public Termin updateTermin(Long id, Termin update) {
         return repo.findById(id)
                 .map(existing -> {
-                    if (repo.existsByStartBeforeAndEndeAfter(update.getEnde(), update.getStart())) {
+                    // Kollisionen ignorieren, wenn es derselbe Termin ist:
+                    if (repo.existsByIdNotAndStartLessThanAndEndeGreaterThan(
+                            id, update.getEnde(), update.getStart())) {
                         throw new ResponseStatusException(HttpStatus.CONFLICT, "Termin kollidiert");
+                    }
+                    // Validierung
+                    if (update.getStart().isAfter(update.getEnde()) || update.getStart().isEqual(update.getEnde())) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Start muss vor Ende liegen");
+                    }
+                    if (update.getKategorie() == null) {
+                        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kategorie fehlt");
                     }
                     // Felder mappen
                     existing.setStart(update.getStart());
@@ -58,6 +67,7 @@ public class TerminService {
                 .orElseThrow(() ->
                         new ResponseStatusException(HttpStatus.NOT_FOUND, "Termin nicht gefunden"));
     }
+
 
     // Delete
     public void deleteTermin(Long id) {
@@ -84,5 +94,10 @@ public class TerminService {
         return repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Termin nicht gefunden"));
+    }
+
+    public List<Termin> sucheNachKategorieUndZeitraum(LocalDateTime von, LocalDateTime bis) {
+        // Beispiel-Implementierung, je nach Repo:
+        return repo.findByStartBetween(von, bis);
     }
 }

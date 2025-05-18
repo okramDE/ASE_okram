@@ -28,6 +28,7 @@ public class AufgabeService {
                     existing.setTitel(update.getTitel());
                     existing.setDeadline(update.getDeadline());
                     existing.setPrioritaet(update.getPrioritaet());
+                    existing.setKategorie(update.getKategorie());
                     return repo.save(existing);
                 })
                 .orElseThrow(() ->
