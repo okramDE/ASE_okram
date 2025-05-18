@@ -8,6 +8,7 @@ import com.example.zeitplaner.web.dto.KategorieDto;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -66,6 +67,15 @@ public class KategorieController {
 //    @id = 1
 //    GET http://localhost:8080/api/kategorien/{{id}}
 //    Content-Type: application/json
+
+    @GetMapping("/suche")
+    public KategorieDto sucheKategorieNachName(@RequestParam("name") String name) {
+        Kategorie k = kategorieService.getByName(name);
+        KategorieDto o = new KategorieDto();
+        o.setId(k.getId());
+        o.setName(k.getName());
+        return o;
+    }
 
     @GetMapping("/{id}")
     public KategorieDto holeKategorie(@PathVariable Long id) {

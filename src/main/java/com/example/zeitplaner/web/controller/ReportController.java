@@ -4,6 +4,7 @@ package com.example.zeitplaner.web.controller;
 import com.example.zeitplaner.web.dto.TimeUsageDto;
 import com.example.zeitplaner.service.ReportService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -27,5 +28,13 @@ public class ReportController {
             @RequestParam("bis") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bis
     ) {
         return reportService.zeitnutzung(von, bis);
+    }
+
+    @GetMapping("/time-usage-name")
+    public List<TimeUsageDto> holeZeitnutzungName(
+            @RequestParam("name") String name,
+            @RequestParam("von") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime von,
+            @RequestParam("bis") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bis) {
+        return reportService.zeitnutzungKategorieName(name, von, bis);
     }
 }

@@ -26,6 +26,9 @@ class TerminServiceTest {
     @Mock
     private WiederholungsRegelService wiederholungsRegelService;
 
+    @Mock
+    private KollisionsService kollisionsService;
+
     @InjectMocks
     private TerminService service;
 
@@ -33,7 +36,7 @@ class TerminServiceTest {
 
     @BeforeEach
     void setUp() {
-        basisTermin = Termin.builder()
+         basisTermin = Termin.builder()
                 .start(LocalDateTime.of(2025, 6, 1, 9, 0))
                 .ende(LocalDateTime.of(2025, 6, 1, 10, 0))
                 .titel("Test")
@@ -46,9 +49,7 @@ class TerminServiceTest {
     void legeTerminAn_speichertWennKeineKollision() {
         when(wiederholungsRegelService.expandRecurrence(basisTermin))
                 .thenReturn(List.of(basisTermin));
-        when(repo.existsByStartBeforeAndEndeAfter(
-                basisTermin.getEnde(), basisTermin.getStart()))
-                .thenReturn(false);
+        when(kollisionsService.hatKollision(basisTermin)).thenReturn(false);
         when(repo.save(basisTermin)).thenReturn(basisTermin);
 
         var result = service.legeTerminAn(basisTermin);
@@ -62,9 +63,7 @@ class TerminServiceTest {
     void legeTerminAn_wirftBeiKollision() {
         when(wiederholungsRegelService.expandRecurrence(basisTermin))
                 .thenReturn(List.of(basisTermin));
-        when(repo.existsByStartBeforeAndEndeAfter(
-                basisTermin.getEnde(), basisTermin.getStart()))
-                .thenReturn(true);
+        when(kollisionsService.hatKollision(basisTermin)).thenReturn(true);
 
         ResponseStatusException ex = assertThrows(
                 ResponseStatusException.class,

@@ -39,4 +39,22 @@ public class ReportService {
                         e.getValue()))
                 .collect(Collectors.toList());
     }
+
+    public List<TimeUsageDto> zeitnutzungKategorieName(String name, LocalDateTime von, LocalDateTime bis) {
+        // Beispiel: Hole alle Termine einer Kategorie nach Name und Zeitbereich
+        var termine = terminRepo.findByKategorie_Name(name).stream()
+                .filter(t -> !t.getStart().isBefore(von) && !t.getStart().isAfter(bis))
+                .collect(Collectors.toList());
+
+        // Zeit aufsummieren wie im normalen Report
+        long min = termine.stream()
+                .mapToLong(t -> Duration.between(t.getStart(), t.getEnde()).toMinutes())
+                .sum();
+
+        // DTO erzeugen (nur eine Kategorie!)
+        if (termine.isEmpty()) return List.of();
+
+        Kategorie kat = termine.get(0).getKategorie();
+        return List.of(new TimeUsageDto(kat.getId(), kat.getName(), min));
+    }
 }

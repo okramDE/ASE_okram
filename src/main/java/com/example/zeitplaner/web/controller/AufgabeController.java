@@ -1,4 +1,3 @@
-// src/main/java/com/example/zeitplaner/web/controller/AufgabeController.java
 package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Aufgabe;
@@ -12,6 +11,7 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -71,6 +71,20 @@ public class AufgabeController {
     @GetMapping
     public List<AufgabeDto> alleAufgaben() {
         return aufgabeService.getAufgabenSortiert().stream().map(a -> {
+            AufgabeDto o = new AufgabeDto();
+            o.setId(a.getId());
+            o.setTitel(a.getTitel());
+            o.setDeadline(a.getDeadline());
+            o.setPrioritaet(a.getPrioritaet().name());
+            o.setKategorieId(a.getKategorie().getId());
+            return o;
+        }).collect(Collectors.toList());
+    }
+
+    @GetMapping("/suche-kategorie")
+    public List<AufgabeDto> sucheNachKategorieName(@RequestParam("name") String name) {
+        List<Aufgabe> aufgaben = aufgabeService.sucheNachKategorieName(name);
+        return aufgaben.stream().map(a -> {
             AufgabeDto o = new AufgabeDto();
             o.setId(a.getId());
             o.setTitel(a.getTitel());

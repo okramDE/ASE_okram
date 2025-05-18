@@ -4,10 +4,13 @@ package com.example.zeitplaner.domain.repository;
 import com.example.zeitplaner.domain.model.Kategorie;
 import com.example.zeitplaner.domain.model.Termin;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@RepositoryRestResource
 public interface TerminRepository extends JpaRepository<Termin, Long> {
 
     // liefert alle Termine, die zeitlich mit dem neuen Termin kollidieren:

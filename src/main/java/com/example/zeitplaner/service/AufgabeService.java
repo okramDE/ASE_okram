@@ -50,6 +50,10 @@ public class AufgabeService {
                         HttpStatus.NOT_FOUND, "Aufgabe nicht gefunden"));
     }
 
+    public List<Aufgabe> sucheNachKategorieName(String name) {
+        return repo.findByKategorie_Name(name);
+    }
+
     private void throwIfNotFound(boolean exists, String msg) {
         if (!exists) throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }

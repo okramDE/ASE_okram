@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -97,6 +98,25 @@ public class TerminController {
             return o;
         }).collect(Collectors.toList());
     }
+
+    @GetMapping("/kategorie-name/{name}")
+    public List<TerminDto> termineNachKategorieName(@PathVariable String name) {
+        return terminService.sucheNachKategorieName(name).stream().map(t -> {
+            TerminDto o = new TerminDto();
+            o.setId(t.getId());
+            o.setStart(t.getStart());
+            o.setEnde(t.getEnde());
+            o.setTitel(t.getTitel());
+            o.setKategorieId(t.getKategorie().getId());
+            o.setWiederholungsRegel(
+                    t.getWiederholungsRegel() != null
+                            ? t.getWiederholungsRegel().toRRuleString()
+                            : null
+            );
+            return o;
+        }).collect(Collectors.toList());
+    }
+
 //@id = 2
 //GET http://localhost:8080/api/termine/{{id}}
     @GetMapping("/{id}")

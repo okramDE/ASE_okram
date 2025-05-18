@@ -42,6 +42,10 @@ public class KategorieService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Kategorie nicht gefunden"));
     }
 
+    public Kategorie getByName(String name) {
+        return repo.findByName(name);
+    }
+
     public void delete(Long id) {
         if (!repo.existsById(id)) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Kategorie nicht gefunden");
