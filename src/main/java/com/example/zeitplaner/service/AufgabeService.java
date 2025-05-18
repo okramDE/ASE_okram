@@ -36,9 +36,7 @@ public class AufgabeService {
     }
 
     public void deleteAufgabe(Long id) {
-        if (!repo.existsById(id)) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Aufgabe nicht gefunden");
-        }
+        throwIfNotFound(repo.existsById(id), "Aufgabe nicht gefunden");
         repo.deleteById(id);
     }
 
@@ -50,6 +48,10 @@ public class AufgabeService {
         return repo.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Aufgabe nicht gefunden"));
+    }
+
+    private void throwIfNotFound(boolean exists, String msg) {
+        if (!exists) throw new ResponseStatusException(HttpStatus.NOT_FOUND, msg);
     }
 
 }
