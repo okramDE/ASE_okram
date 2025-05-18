@@ -21,7 +21,8 @@ public class Termin {
     @JoinColumn(name = "kategorie_id")
     private Kategorie kategorie;
 
-    private String wiederholungsRegel;
+    @Convert(converter = WiederholungsRegelConverter.class)
+    private WiederholungsRegel wiederholungsRegel;
 
 
 }

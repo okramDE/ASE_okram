@@ -1,47 +1,48 @@
 package com.example.zeitplaner.service;
 
-
-import com.example.zeitplaner.domain.model.WiederholungsRegel;
 import com.example.zeitplaner.domain.model.Termin;
+import com.example.zeitplaner.domain.model.WiederholungsRegel;
+import com.example.zeitplaner.domain.strategy.WiederholungsStrategie;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class WiederholungsRegelService {
 
 
-    public List<Termin> expandRecurrence(Termin base) {
-        if (base.getWiederholungsRegel() == null || base.getWiederholungsRegel().isBlank()) {
-            return List.of(base);
-        }
-        WiederholungsRegel rule = WiederholungsRegel.parse(base.getWiederholungsRegel());
-        List<Termin> all = new ArrayList<>();
-        all.add(base);
+    private final Map<WiederholungsRegel.Frequency, WiederholungsStrategie> strategien;
 
-        LocalDateTime start = base.getStart();
-        LocalDateTime end   = base.getEnde();
-        int generated = 1;
-        while (rule.getCount() == null || generated < rule.getCount()) {
-            switch (rule.getFrequency()) {
-                case DAILY   -> { start = start.plusDays(rule.getInterval());   end = end.plusDays(rule.getInterval()); }
-                case WEEKLY  -> { start = start.plusWeeks(rule.getInterval());  end = end.plusWeeks(rule.getInterval()); }
-                case MONTHLY -> { start = start.plusMonths(rule.getInterval()); end = end.plusMonths(rule.getInterval()); }
-                case YEARLY  -> { start = start.plusYears(rule.getInterval());  end = end.plusYears(rule.getInterval()); }
-            }
-            Termin next = Termin.builder()
-                    .start(start)
-                    .ende(end)
-                    .titel(base.getTitel())
-                    .kategorie(base.getKategorie())
-                    .wiederholungsRegel(null)  // nur auf dem Basis-Termin
-                    .build();
-            all.add(next);
-            generated++;
-            if (rule.getCount() == null) break; // ohne COUNT nur 1 Termin
+    public WiederholungsRegelService(List<WiederholungsStrategie> strategien) {
+
+                this.strategien = new EnumMap<>(WiederholungsRegel.Frequency.class);
+                for (WiederholungsStrategie s : strategien) {
+                        // wir gehen davon aus, dass getFrequency() den gleichen Namen wie das Enum liefert
+                                WiederholungsRegel.Frequency freq =
+                                    WiederholungsRegel.Frequency.valueOf(s.getFrequency());
+                        this.strategien.put(freq, s);
+                    }
+    }
+
+    public List<Termin> expandRecurrence(Termin basis) {
+
+                // direkt das VO auslesen
+                        WiederholungsRegel wr = basis.getWiederholungsRegel();
+                if (wr == null) {
+                        return List.of(basis);
+                   }
+
+
+                WiederholungsStrategie strat = strategien.get(wr.getFrequency());
+        if (strat == null) {
+            throw new IllegalArgumentException("Unbekannte Frequenz: " + wr.getFrequency());
         }
-        return all;
+        // Basis-Termin selbst hinzufügen
+        List<Termin> result = new ArrayList<>();
+        result.add(basis);
+        // und dann die Wiederholungen via Strategy
+        result.addAll(strat.generiereWiederholungen(
+                basis, wr.getInterval(), wr.getCount()));
+        return result;
     }
 }

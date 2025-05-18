@@ -3,6 +3,7 @@ package com.example.zeitplaner.web.controller;
 
 import com.example.zeitplaner.domain.model.Kategorie;
 import com.example.zeitplaner.domain.model.Termin;
+import com.example.zeitplaner.domain.model.WiederholungsRegel;
 import com.example.zeitplaner.service.KategorieService;
 import com.example.zeitplaner.service.TerminService;
 import com.example.zeitplaner.web.dto.TerminDto;
@@ -40,7 +41,7 @@ public class TerminController {
         basis.setEnde(dto.getEnde());
         basis.setTitel(dto.getTitel());
         basis.setKategorie(kat);
-        basis.setWiederholungsRegel(dto.getWiederholungsRegel());
+        basis.setWiederholungsRegel(WiederholungsRegel.parse(dto.getWiederholungsRegel()));
 
         List<Termin> gespeicherte = terminService.legeTerminAn(basis);
 
@@ -51,7 +52,11 @@ public class TerminController {
             o.setEnde(t.getEnde());
             o.setTitel(t.getTitel());
             o.setKategorieId(t.getKategorie().getId());
-            o.setWiederholungsRegel(t.getWiederholungsRegel());
+            o.setWiederholungsRegel(
+                                  t.getWiederholungsRegel() != null
+                                            ? t.getWiederholungsRegel().toRRuleString()
+                                            : null
+                                        );
             return o;
         }).collect(Collectors.toList());
 
@@ -67,7 +72,11 @@ public class TerminController {
             o.setEnde(t.getEnde());
             o.setTitel(t.getTitel());
             o.setKategorieId(t.getKategorie().getId());
-            o.setWiederholungsRegel(t.getWiederholungsRegel());
+            o.setWiederholungsRegel(
+                    t.getWiederholungsRegel() != null
+                            ? t.getWiederholungsRegel().toRRuleString()
+                            : null
+            );
             return o;
         }).collect(Collectors.toList());
     }
@@ -81,7 +90,11 @@ public class TerminController {
         o.setEnde(t.getEnde());
         o.setTitel(t.getTitel());
         o.setKategorieId(t.getKategorie().getId());
-        o.setWiederholungsRegel(t.getWiederholungsRegel());
+        o.setWiederholungsRegel(
+                t.getWiederholungsRegel() != null
+                        ? t.getWiederholungsRegel().toRRuleString()
+                        : null
+        );
         return o;
     }
 
@@ -96,7 +109,11 @@ public class TerminController {
         neu.setEnde(dto.getEnde());
         neu.setTitel(dto.getTitel());
         neu.setKategorie(kat);
-        neu.setWiederholungsRegel(dto.getWiederholungsRegel());
+        neu.setWiederholungsRegel(
+                            dto.getWiederholungsRegel() != null
+                                      ? WiederholungsRegel.parse(dto.getWiederholungsRegel())
+                                     : null
+                        );
 
         Termin updated = terminService.updateTermin(id, neu);
         TerminDto o = new TerminDto();
@@ -105,7 +122,11 @@ public class TerminController {
         o.setEnde(updated.getEnde());
         o.setTitel(updated.getTitel());
         o.setKategorieId(updated.getKategorie().getId());
-        o.setWiederholungsRegel(updated.getWiederholungsRegel());
+        o.setWiederholungsRegel(
+                updated.getWiederholungsRegel() == null
+                        ? null
+                        : updated.getWiederholungsRegel().toRRuleString()
+        );
         return o;
     }
 
@@ -124,7 +145,11 @@ public class TerminController {
             o.setEnde(t.getEnde());
             o.setTitel(t.getTitel());
             o.setKategorieId(t.getKategorie().getId());
-            o.setWiederholungsRegel(t.getWiederholungsRegel());
+            o.setWiederholungsRegel(
+                                  t.getWiederholungsRegel() != null
+                                           ? t.getWiederholungsRegel().toRRuleString()
+                                            : null
+                                        );
             return o;
         }).collect(Collectors.toList());
     }
@@ -156,7 +181,11 @@ public class TerminController {
             o.setEnde(t.getEnde());
             o.setTitel(t.getTitel());
             o.setKategorieId(t.getKategorie().getId());
-            o.setWiederholungsRegel(t.getWiederholungsRegel());
+            o.setWiederholungsRegel(
+                    t.getWiederholungsRegel() != null
+                            ? t.getWiederholungsRegel().toRRuleString()
+                            : null
+            );
             return o;
         }).collect(Collectors.toList());
     }
