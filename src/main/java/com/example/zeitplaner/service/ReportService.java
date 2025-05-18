@@ -7,6 +7,8 @@ import com.example.zeitplaner.domain.model.Termin;
 import org.springframework.stereotype.Service;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.chrono.ChronoLocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -16,10 +18,10 @@ public class ReportService {
     private final TerminRepository terminRepo;
     public ReportService(TerminRepository terminRepo) { this.terminRepo = terminRepo; }
 
-    public List<TimeUsageDto> zeitnutzung(LocalDate from, LocalDate to) {
+    public List<TimeUsageDto> zeitnutzung(LocalDateTime from, LocalDateTime to) {
         var termine = terminRepo.findAll().stream()
-                .filter(t -> !t.getStart().toLocalDate().isBefore(from)
-                        && !t.getStart().toLocalDate().isAfter(to))
+                .filter(t -> !t.getStart().toLocalDate().isBefore(ChronoLocalDate.from(from))
+                        && !t.getStart().toLocalDate().isAfter(ChronoLocalDate.from(to)))
                 .collect(Collectors.toList());
 
         // Gruppieren nach Kategorie-Entität und Summieren

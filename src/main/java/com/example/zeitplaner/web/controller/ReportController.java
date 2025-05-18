@@ -7,6 +7,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -19,11 +20,12 @@ public class ReportController {
         this.reportService = reportService;
     }
 
+    //GET http://localhost:8080/api/report/time-usage?von=2025-06-01T00:00:00&bis=2025-06-20T23:59:59
     @GetMapping("/time-usage")
     public List<TimeUsageDto> holeZeitnutzung(
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
-            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to
+            @RequestParam("von") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime von,
+            @RequestParam("bis") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime bis
     ) {
-        return reportService.zeitnutzung(from, to);
+        return reportService.zeitnutzung(von, bis);
     }
 }
