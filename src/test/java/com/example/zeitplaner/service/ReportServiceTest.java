@@ -36,8 +36,8 @@ class ReportServiceTest {
                 "T2", kat, null);
         when(repo.findAll()).thenReturn(List.of(t1,t2));
 
-        var res = svc.zeitnutzung(LocalDate.of(2025,5,1),
-                LocalDate.of(2025,5,31));
+        var res = svc.zeitnutzung(LocalDate.of(2025,5,1).atStartOfDay(),
+                LocalDate.of(2025,5,31).atStartOfDay());
         assertThat(res).hasSize(1)
                 .first()
                 .matches(dto ->
